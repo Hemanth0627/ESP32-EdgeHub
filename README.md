@@ -83,18 +83,6 @@ The included `.gitignore` excludes virtual environments, local environment files
 ## Firmware setup
 
 Open `firmware/sketch_oct6a/sketch_oct6a.ino` with the Arduino IDE or another ESP32-compatible build tool. Set your local Wi-Fi SSID and password in the sketch, select the matching ESP32 board and port, then compile and upload. The source includes the Phase 8.7 hardware-state and OTA routes used by the Flask app.
-
-## GitHub upload
-
-After extracting the ZIP, review the files and upload the project folder to a new GitHub repository. For command-line Git:
-
-```powershell
-git init
-git add .
-git commit -m "Add ESP32-EdgeHub Phase 8.7"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-git push -u origin main
 ```
 
 Replace the remote URL with your repository URL. Never push `.env` files, Wi-Fi passwords, API keys, or local databases.
