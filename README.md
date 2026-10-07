@@ -9,7 +9,7 @@ ESP32-EdgeHub is a local Flask dashboard and AI-assisted control app for an ESP3
 - `templates/` and `static/` — dashboard, OTA page, and styles.
 - `test_*.py` — existing manual connectivity and tool-check scripts.
 - `config.example.ps1` — example for setting your ESP32 IP for the current PowerShell session.
-- `firmware/sketch_oct6a/sketch_oct6a.ino` — ESP32 firmware source with Phase 8.7 and OTA endpoints.
+- `firmware/sketch_oct6a/sketch_oct6a.ino` — ESP32 firmware source with Phase and OTA endpoints.
 
 The source project folder did not contain ESP32 firmware source. The app expects compatible firmware to already be installed on the board. Firmware endpoints and supported features must match the firmware build you use.
 
@@ -68,7 +68,7 @@ The Flask app creates `telemetry.db` locally when it starts. That runtime databa
 - AI-assisted commands through Qwen3 4B/Ollama
 - Safe-listed digital GPIO read and write, including multi-pin writes
 - PWM output and ADC1 reads for supported pins
-- Phase 8.7 unified hardware-state reporting
+- Phase unified hardware-state reporting
 - OTA firmware upload page for compatible firmware
 - Local health, status, history, and hardware-state APIs
 
