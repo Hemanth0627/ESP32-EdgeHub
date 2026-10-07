@@ -82,7 +82,7 @@ The included `.gitignore` excludes virtual environments, local environment files
 
 ## Firmware setup
 
-Open `firmware/sketch_oct6a/sketch_oct6a.ino` with the Arduino IDE or another ESP32-compatible build tool. Set your local Wi-Fi SSID and password in the sketch, select the matching ESP32 board and port, then compile and upload. The source includes the Phase 8.7 hardware-state and OTA routes used by the Flask app.
+Open `firmware/sketch_oct6a/sketch_oct6a.ino` with the Arduino IDE or another ESP32-compatible build tool. Set your local Wi-Fi SSID and password in the sketch, select the matching ESP32 board and port, then compile and upload.
 ```
 
 Replace the remote URL with your repository URL. Never push `.env` files, Wi-Fi passwords, API keys, or local databases.
