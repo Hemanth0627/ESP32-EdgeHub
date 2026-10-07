@@ -1,0 +1,101 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #1f2937;
+}
+
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: 40px auto;
+}
+
+header {
+    background: #111827;
+    color: white;
+    padding: 30px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    margin: 0 0 8px;
+}
+
+header p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+.status-card,
+.control-card,
+.log-card {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.status-row:last-child {
+    border-bottom: none;
+}
+
+.gpio-box {
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.gpio-status {
+    margin-bottom: 20px;
+}
+
+#gpioState {
+    margin-left: 8px;
+}
+
+.buttons {
+    display: flex;
+    gap: 12px;
+}
+
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.on-button {
+    background: #16a34a;
+}
+
+.off-button {
+    background: #dc2626;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+#log {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: monospace;
+}
