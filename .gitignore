@@ -9,6 +9,16 @@ env/
 !.env.example
 config.local.ps1
 
+# AI provider picked on the dashboard (per machine)
+ai_settings.json
+
+# Local backup copies of earlier phases
+*_backup.py
+templates/*_backup.html
+
+# Local tool logs
+.gstack/
+
 # Runtime data and logs
 *.db
 *.sqlite

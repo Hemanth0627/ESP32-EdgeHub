@@ -1,11 +1,13 @@
 from flask import Flask, render_template, jsonify, request
-import os
 import requests
 import sqlite3
 import json
+import os
 from datetime import datetime
 
-from ollama import chat
+import httpx
+from ollama import Client as OllamaClient, ResponseError
+from openai import OpenAI, APIStatusError, APIConnectionError
 
 from ai_tools import (
     get_device_status,
@@ -51,7 +53,145 @@ ESP32_STATUS_URL = (
 # AI CONFIGURATION
 # ============================================================
 
-AI_MODEL = "qwen3:4b"
+# The AI provider can be switched at runtime from the
+# AI EdgeHub Control panel on the dashboard:
+#   "gemini" -> Google Gemini API (free tier, needs GEMINI_API_KEY)
+#   "ollama" -> local Ollama model (works offline)
+#   "auto"   -> Gemini first, local Ollama when Gemini is
+#               busy, out of free quota or unreachable
+# The choice is saved in ai_settings.json so it survives
+# restarts. AI_PROVIDER (env var) is only the first default.
+
+AI_PROVIDERS = (
+    "gemini",
+    "ollama",
+    "auto"
+)
+
+AI_SETTINGS_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "ai_settings.json"
+)
+
+OLLAMA_MODEL = os.environ.get(
+    "OLLAMA_MODEL",
+    "qwen3:4b"
+)
+
+OLLAMA_HOST = os.environ.get(
+    "OLLAMA_HOST",
+    "http://127.0.0.1:11434"
+)
+
+GEMINI_MODEL = os.environ.get(
+    "GEMINI_MODEL",
+    "gemini-3.8-flash"
+)
+
+# Free models tried in order when the main model is
+# overloaded (503) or out of free quota (429).
+# Each model has its own free daily quota.
+
+GEMINI_FALLBACK_MODELS = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite"
+]
+
+GEMINI_MODELS = [GEMINI_MODEL] + [
+    model
+    for model in GEMINI_FALLBACK_MODELS
+    if model != GEMINI_MODEL
+]
+
+GEMINI_RETRY_STATUS_CODES = {
+    429,
+    500,
+    503
+}
+
+GEMINI_BASE_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+AI_PROVIDER_INFO = {
+
+    "gemini": {
+        "name": "Gemini",
+        "label": "Gemini API • Free tier",
+        "description": (
+            "Runs on Google's Gemini API (free tier). "
+            "Needs internet."
+        )
+    },
+
+    "ollama": {
+        "name": "Ollama",
+        "label": f"{OLLAMA_MODEL} • Local AI",
+        "description": (
+            "Runs locally on this PC through Ollama. "
+            "Works offline."
+        )
+    },
+
+    "auto": {
+        "name": "Auto",
+        "label": "Auto • Gemini → Ollama",
+        "description": (
+            "Uses Gemini, and switches to local Ollama "
+            "when Gemini is busy, out of quota or offline."
+        )
+    }
+}
+
+
+def load_ai_provider():
+
+    # The choice saved from the dashboard wins,
+    # then the AI_PROVIDER env var, then Gemini.
+
+    try:
+
+        with open(AI_SETTINGS_FILE, encoding="utf-8") as file:
+
+            provider = json.load(file).get("provider")
+
+        if provider in AI_PROVIDERS:
+
+            return provider
+
+    except (OSError, ValueError, AttributeError):
+
+        pass
+
+
+    provider = os.environ.get(
+        "AI_PROVIDER",
+        "gemini"
+    ).strip().lower()
+
+    if provider not in AI_PROVIDERS:
+
+        raise ValueError(
+            f"Unknown AI_PROVIDER '{provider}'. "
+            f"Use one of: {', '.join(AI_PROVIDERS)}."
+        )
+
+    return provider
+
+
+def save_ai_provider(provider):
+
+    with open(AI_SETTINGS_FILE, "w", encoding="utf-8") as file:
+
+        json.dump(
+            {"provider": provider},
+            file,
+            indent=2
+        )
+
+
+# Current provider. Changed by POST /api/ai/provider.
+ai_provider = load_ai_provider()
 
 
 # ============================================================
@@ -1190,12 +1330,364 @@ def execute_ai_tool(
 
 
 # ============================================================
+# AI PROVIDERS
+# ============================================================
+
+class AIUnavailableError(Exception):
+
+    # No AI model could answer. The message is short and
+    # safe to show in the dashboard.
+
+    pass
+
+
+_gemini_client = None
+
+
+def gemini_api_key():
+
+    return os.environ.get(
+        "GEMINI_API_KEY",
+        ""
+    ).strip()
+
+
+def get_gemini_client():
+
+    global _gemini_client
+
+    if _gemini_client is None:
+
+        if not gemini_api_key():
+
+            raise AIUnavailableError(
+                "GEMINI_API_KEY is not set. "
+                "Set it and restart the app, "
+                "or switch the AI to Ollama."
+            )
+
+        # No automatic retries: on a busy or out-of-quota
+        # model the client would wait up to a minute.
+        # first_ai_call moves to the next model instead.
+
+        _gemini_client = OpenAI(
+            api_key=gemini_api_key(),
+            base_url=GEMINI_BASE_URL,
+            max_retries=0,
+            timeout=30
+        )
+
+    return _gemini_client
+
+
+def get_ollama_client():
+
+    # Built on use, so the status check and the chat call
+    # always talk to the same OLLAMA_HOST.
+
+    return OllamaClient(
+        host=OLLAMA_HOST
+    )
+
+
+def gemini_status():
+
+    # Only checks for the key, so the dashboard
+    # doesn't use up free quota just by loading.
+
+    if gemini_api_key():
+
+        return {
+            "available": True,
+            "detail": "API key found"
+        }
+
+    return {
+        "available": False,
+        "detail": "GEMINI_API_KEY is not set"
+    }
+
+
+def ollama_status():
+
+    try:
+
+        response = requests.get(
+            f"{OLLAMA_HOST}/api/tags",
+            timeout=2
+        )
+
+        response.raise_for_status()
+
+        installed = {
+            model.get("name")
+            for model in response.json().get("models", [])
+        }
+
+    except (requests.RequestException, ValueError):
+
+        return {
+            "available": False,
+            "detail": "Ollama is not running. Open the Ollama app."
+        }
+
+
+    if OLLAMA_MODEL not in installed:
+
+        return {
+            "available": False,
+            "detail": (
+                f"{OLLAMA_MODEL} is not downloaded. "
+                f"Run: ollama pull {OLLAMA_MODEL}"
+            )
+        }
+
+    return {
+        "available": True,
+        "detail": f"{OLLAMA_MODEL} is ready"
+    }
+
+
+def ai_provider_state():
+
+    statuses = {
+        "gemini": gemini_status(),
+        "ollama": ollama_status()
+    }
+
+    return {
+
+        "provider":
+            ai_provider,
+
+        "label":
+            AI_PROVIDER_INFO[ai_provider]["label"],
+
+        "description":
+            AI_PROVIDER_INFO[ai_provider]["description"],
+
+        "providers": {
+
+            "gemini": {
+                **statuses["gemini"],
+                "models": GEMINI_MODELS
+            },
+
+            "ollama": {
+                **statuses["ollama"],
+                "model": OLLAMA_MODEL
+            },
+
+            "auto": {
+                "available": (
+                    statuses["gemini"]["available"]
+                    or statuses["ollama"]["available"]
+                ),
+                "detail": "Needs Gemini or Ollama"
+            }
+        }
+    }
+
+
+def ai_candidates(provider):
+
+    # (provider, model) pairs tried in order for the first
+    # AI call. Auto skips Gemini when there is no API key.
+
+    gemini = [
+        ("gemini", model)
+        for model in GEMINI_MODELS
+    ]
+
+    ollama = [
+        ("ollama", OLLAMA_MODEL)
+    ]
+
+    if provider == "gemini":
+
+        return gemini
+
+    if provider == "ollama":
+
+        return ollama
+
+    if not gemini_api_key():
+
+        return ollama
+
+    return gemini + ollama
+
+
+def can_try_next_model(provider, error):
+
+    # True when the error means "this model can't answer
+    # right now", so trying another model makes sense.
+
+    if provider == "gemini":
+
+        return (
+            isinstance(error, APIConnectionError)
+            or (
+                isinstance(error, APIStatusError)
+                and error.status_code in GEMINI_RETRY_STATUS_CODES
+            )
+        )
+
+    return isinstance(
+        error,
+        (ConnectionError, ResponseError, httpx.HTTPError)
+    )
+
+
+def describe_ai_error(error):
+
+    if isinstance(error, APIStatusError):
+
+        if error.status_code == 429:
+
+            return "free quota used up"
+
+        if error.status_code == 503:
+
+            return "busy (high demand)"
+
+        return f"error {error.status_code}"
+
+    if isinstance(error, APIConnectionError):
+
+        return "can't reach Google, check the internet"
+
+    if isinstance(error, ConnectionError):
+
+        return "Ollama is not running"
+
+    if isinstance(error, ResponseError):
+
+        return f"Ollama error: {error.error}"
+
+    if isinstance(error, httpx.HTTPError):
+
+        return "Ollama did not respond"
+
+    return str(error)
+
+
+def ai_chat(
+    messages,
+    tool_mode,
+    provider,
+    model
+):
+
+    # tool_mode "auto" lets the AI request tools,
+    # "none" forces a plain text answer.
+
+    if provider == "gemini":
+
+        # Gemini keeps the tool list on every call so it can
+        # read the earlier tool calls in the conversation.
+
+        response = get_gemini_client().chat.completions.create(
+
+            model=model,
+
+            messages=messages,
+
+            tools=AI_TOOLS,
+
+            tool_choice=tool_mode
+        )
+
+        return response.choices[0].message
+
+
+    response = get_ollama_client().chat(
+
+        model=model,
+
+        messages=messages,
+
+        tools=(
+            AI_TOOLS
+            if tool_mode == "auto"
+            else None
+        )
+    )
+
+    return response.message
+
+
+def first_ai_call(
+    messages,
+    provider
+):
+
+    # Returns (message, provider used, model used).
+    # Moves to the next model when one can't answer. This is
+    # safe here because no tool has run yet.
+
+    failures = []
+
+    if provider == "auto" and not gemini_api_key():
+
+        failures.append("Gemini: no API key")
+
+
+    for candidate_provider, model in ai_candidates(provider):
+
+        try:
+
+            return (
+                ai_chat(messages, "auto", candidate_provider, model),
+                candidate_provider,
+                model
+            )
+
+        except Exception as error:
+
+            if not can_try_next_model(candidate_provider, error):
+
+                raise
+
+            reason = describe_ai_error(error)
+
+            print(
+                f"AI model {model} unavailable ({reason}), "
+                "trying next model..."
+            )
+
+            failures.append(
+                f"{model}: {reason}"
+            )
+
+
+    hint = {
+        "gemini": "Try again later, or switch the AI to Ollama or Auto.",
+        "ollama": "Start the Ollama app, or switch the AI to Gemini.",
+        "auto": "Check the internet connection and that Ollama is running."
+    }[provider]
+
+    raise AIUnavailableError(
+        "No AI model could answer ("
+        + "; ".join(failures)
+        + "). "
+        + hint
+    )
+
+
+# ============================================================
 # RUN AI COMMAND
 # ============================================================
 
 def run_ai_command(
-    user_command
+    user_command,
+    provider=None
 ):
+
+    # Read the provider once, so switching it from the
+    # dashboard never changes a command halfway through.
+
+    provider = provider or ai_provider
 
     messages = [
 
@@ -1221,21 +1713,31 @@ def run_ai_command(
     # FIRST AI CALL
     # ========================================================
 
-    response = chat(
-
-        model=AI_MODEL,
-
-        messages=messages,
-
-        tools=AI_TOOLS
+    response_message, used_provider, model = first_ai_call(
+        messages,
+        provider
     )
+
+    print(
+        "AI model used:",
+        f"{model} ({used_provider})"
+    )
+
+    answered_by = {
+
+        "provider":
+            used_provider,
+
+        "model":
+            model
+    }
 
 
     # ========================================================
     # NO TOOL REQUIRED
     # ========================================================
 
-    if not response.message.tool_calls:
+    if not response_message.tool_calls:
 
         return {
 
@@ -1243,7 +1745,9 @@ def run_ai_command(
                 True,
 
             "response":
-                response.message.content
+                response_message.content,
+
+            **answered_by
         }
 
 
@@ -1251,17 +1755,32 @@ def run_ai_command(
     # ADD AI TOOL REQUEST
     # ========================================================
 
-    messages.append(
-        response.message
-    )
+    if used_provider == "gemini":
+
+        # Send Gemini's message back unchanged, including
+        # its thought signature, or the next call fails.
+
+        messages.append(
+            response_message.model_dump(
+                exclude_none=True
+            )
+        )
+
+    else:
+
+        messages.append(
+            response_message
+        )
 
 
     # ========================================================
     # EXECUTE EVERY REQUESTED TOOL
     # ========================================================
 
+    tool_results = []
+
     for tool_call in (
-        response.message.tool_calls
+        response_message.tool_calls
     ):
 
         tool_name = (
@@ -1280,12 +1799,17 @@ def run_ai_command(
             arguments
         )
 
+        tool_results.append({
+            "tool": tool_name,
+            "result": result
+        })
+
 
         # ----------------------------------------------------
         # RETURN TOOL RESULT TO AI
         # ----------------------------------------------------
 
-        messages.append({
+        tool_message = {
 
             "role":
                 "tool",
@@ -1295,19 +1819,60 @@ def run_ai_command(
                     result,
                     default=str
                 )
-        })
+        }
+
+        if used_provider == "gemini":
+
+            tool_message["tool_call_id"] = (
+                tool_call.id
+            )
+
+        messages.append(
+            tool_message
+        )
 
 
     # ========================================================
     # SECOND AI CALL
     # ========================================================
 
-    final_response = chat(
+    try:
 
-        model=AI_MODEL,
+        final_message = ai_chat(
+            messages,
+            "none",
+            used_provider,
+            model
+        )
 
-        messages=messages
-    )
+    except Exception as error:
+
+        if not can_try_next_model(used_provider, error):
+
+            raise
+
+        # The tools already ran, so don't start over with
+        # another model (that would repeat hardware actions).
+        # Report the raw tool results instead.
+
+        return {
+
+            "success":
+                True,
+
+            "response":
+                (
+                    "Your command was carried out, but "
+                    f"{model} could not write a summary "
+                    f"({describe_ai_error(error)}). Results: "
+                    + json.dumps(
+                        tool_results,
+                        default=str
+                    )
+                ),
+
+            **answered_by
+        }
 
 
     return {
@@ -1316,7 +1881,9 @@ def run_ai_command(
             True,
 
         "response":
-            final_response.message.content
+            final_message.content,
+
+        **answered_by
     }
 
 
@@ -1328,7 +1895,9 @@ def run_ai_command(
 def dashboard():
 
     return render_template(
-        "dashboard.html"
+        "dashboard.html",
+        ai_provider=ai_provider,
+        ai_provider_info=AI_PROVIDER_INFO
     )
 
 
@@ -1434,6 +2003,25 @@ def ai_command():
         )
 
 
+    except AIUnavailableError as e:
+
+        print(
+            "AI UNAVAILABLE:",
+            str(e)
+        )
+
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                str(e)
+
+        }), 503
+
+
     except Exception as e:
 
         print(
@@ -1451,6 +2039,109 @@ def ai_command():
                 str(e)
 
         }), 500
+
+
+# ============================================================
+# AI PROVIDER API
+# ============================================================
+
+@app.route(
+    "/api/ai/provider",
+    methods=["GET"]
+)
+def get_ai_provider():
+
+    return jsonify(
+        ai_provider_state()
+    )
+
+
+@app.route(
+    "/api/ai/provider",
+    methods=["POST"]
+)
+def set_ai_provider():
+
+    global ai_provider
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    provider = str(
+        data.get("provider", "")
+    ).strip().lower()
+
+
+    if provider not in AI_PROVIDERS:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                f"Unknown provider. Use one of: {', '.join(AI_PROVIDERS)}."
+
+        }), 400
+
+
+    # Refuse a switch that would make every command fail.
+
+    state = ai_provider_state()
+
+    target = state["providers"][provider]
+
+    if not target["available"]:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                (
+                    f"Can't switch to {AI_PROVIDER_INFO[provider]['name']}: "
+                    + (
+                        target["detail"]
+                        if provider != "auto"
+                        else "neither Gemini nor Ollama is available"
+                    )
+                ),
+
+            **state
+
+        }), 409
+
+
+    ai_provider = provider
+
+    try:
+
+        save_ai_provider(provider)
+
+    except OSError as e:
+
+        # Still switched for this run; only saving failed.
+
+        print(
+            "Could not save AI provider:",
+            str(e)
+        )
+
+
+    print(
+        "AI provider switched to:",
+        provider
+    )
+
+    return jsonify({
+
+        "success":
+            True,
+
+        **ai_provider_state()
+    })
 
 
 # ============================================================
@@ -2123,9 +2814,27 @@ if __name__ == "__main__":
     )
 
     print(
-        "AI model:",
-        AI_MODEL
+        "AI provider:",
+        AI_PROVIDER_INFO[ai_provider]["label"],
+        "(switch it from the dashboard)"
     )
+
+    print(
+        "Gemini models:",
+        GEMINI_MODELS,
+        "| Ollama model:",
+        OLLAMA_MODEL
+    )
+
+    if (
+        ai_provider == "gemini"
+        and not gemini_api_key()
+    ):
+
+        print(
+            "WARNING: GEMINI_API_KEY is not set. "
+            "AI commands will fail until it is."
+        )
 
     print(
         "Phase 8.6 PWM AI integration enabled."

@@ -12,6 +12,26 @@
 
     <title>ESP32 EdgeHub</title>
 
+    <meta name="theme-color" content="#050816">
+
+
+    <!-- Fonts -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap"
+    >
+
+
+    <!-- Styles -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dashboard.css') }}"
+    >
+
 
     <!-- Chart.js -->
 
@@ -20,814 +40,16 @@
     ></script>
 
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        body {
-
-            margin: 0;
-
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
-
-            background:
-                #f1f5f9;
-
-            color:
-                #0f172a;
-
-        }
-
-
-        .container {
-
-            max-width: 1400px;
-
-            margin:
-                0 auto;
-
-            padding:
-                25px;
-
-        }
-
-
-        /* ====================================================
-           HEADER
-           ==================================================== */
-
-        .header {
-
-            background:
-                #111827;
-
-            color:
-                white;
-
-            padding:
-                30px;
-
-            border-radius:
-                18px;
-
-            margin-bottom:
-                25px;
-
-        }
-
-
-        .header h1 {
-
-            margin:
-                0 0 8px 0;
-
-            font-size:
-                32px;
-
-        }
-
-
-        .header p {
-
-            margin:
-                0;
-
-            color:
-                #cbd5e1;
-
-        }
-
-
-        /* ====================================================
-           METRICS
-           ==================================================== */
-
-        .metrics {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(4, 1fr);
-
-            gap:
-                18px;
-
-            margin-bottom:
-                25px;
-
-        }
-
-
-        .metric-card {
-
-            background:
-                white;
-
-            padding:
-                22px;
-
-            border-radius:
-                16px;
-
-            box-shadow:
-                0 5px 20px
-                rgba(15, 23, 42, 0.07);
-
-        }
-
-
-        .metric-title {
-
-            color:
-                #64748b;
-
-            font-size:
-                14px;
-
-            margin-bottom:
-                10px;
-
-        }
-
-
-        .metric-value {
-
-            font-size:
-                25px;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        /* ====================================================
-           GENERAL CARD
-           ==================================================== */
-
-        .card {
-
-            background:
-                white;
-
-            padding:
-                25px;
-
-            border-radius:
-                16px;
-
-            margin-bottom:
-                25px;
-
-            box-shadow:
-                0 5px 20px
-                rgba(15, 23, 42, 0.07);
-
-        }
-
-
-        .card h2 {
-
-            margin-top:
-                0;
-
-        }
-
-
-        /* ====================================================
-           DEVICE GRID
-           ==================================================== */
-
-        .info-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap:
-                15px;
-
-        }
-
-
-        .info-item {
-
-            background:
-                #f8fafc;
-
-            padding:
-                16px;
-
-            border-radius:
-                10px;
-
-            border:
-                1px solid
-                #e2e8f0;
-
-        }
-
-
-        .info-label {
-
-            color:
-                #64748b;
-
-            font-size:
-                13px;
-
-            margin-bottom:
-                7px;
-
-        }
-
-
-        .info-value {
-
-            font-weight:
-                bold;
-
-        }
-
-
-        /* ====================================================
-           HEALTH
-           ==================================================== */
-
-        .health-box {
-
-            padding:
-                18px;
-
-            border-radius:
-                12px;
-
-            background:
-                #f8fafc;
-
-            border:
-                1px solid
-                #e2e8f0;
-
-        }
-
-
-        .health-good {
-
-            color:
-                #16a34a;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        .health-warning {
-
-            color:
-                #ca8a04;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        .health-critical {
-
-            color:
-                #dc2626;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        .alerts {
-
-            margin-top:
-                12px;
-
-        }
-
-
-        .alert {
-
-            padding:
-                10px 12px;
-
-            margin-bottom:
-                8px;
-
-            border-radius:
-                8px;
-
-            background:
-                #fef3c7;
-
-            color:
-                #92400e;
-
-        }
-
-
-        /* ====================================================
-           AI PANEL
-           ==================================================== */
-
-        .ai-panel {
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #111827,
-                    #1e293b
-                );
-
-            color:
-                white;
-
-            padding:
-                28px;
-
-            border-radius:
-                18px;
-
-            margin-bottom:
-                25px;
-
-            box-shadow:
-                0 10px 30px
-                rgba(15, 23, 42, 0.15);
-
-        }
-
-
-        .ai-header {
-
-            display:
-                flex;
-
-            justify-content:
-                space-between;
-
-            align-items:
-                center;
-
-            gap:
-                15px;
-
-            margin-bottom:
-                8px;
-
-        }
-
-
-        .ai-header h2 {
-
-            margin:
-                0;
-
-        }
-
-
-        .ai-status {
-
-            background:
-                #065f46;
-
-            color:
-                #d1fae5;
-
-            padding:
-                7px 12px;
-
-            border-radius:
-                20px;
-
-            font-size:
-                13px;
-
-        }
-
-
-        .ai-description {
-
-            color:
-                #cbd5e1;
-
-            margin-bottom:
-                20px;
-
-        }
-
-
-        .ai-input-row {
-
-            display:
-                flex;
-
-            gap:
-                10px;
-
-        }
-
-
-        .ai-input {
-
-            flex:
-                1;
-
-            padding:
-                15px;
-
-            border-radius:
-                10px;
-
-            border:
-                1px solid
-                #475569;
-
-            background:
-                #0f172a;
-
-            color:
-                white;
-
-            font-size:
-                15px;
-
-            outline:
-                none;
-
-        }
-
-
-        .ai-input:focus {
-
-            border-color:
-                #60a5fa;
-
-        }
-
-
-        .ai-send-btn {
-
-            border:
-                none;
-
-            padding:
-                0 24px;
-
-            border-radius:
-                10px;
-
-            background:
-                #2563eb;
-
-            color:
-                white;
-
-            font-weight:
-                bold;
-
-            cursor:
-                pointer;
-
-        }
-
-
-        .ai-send-btn:hover {
-
-            background:
-                #1d4ed8;
-
-        }
-
-
-        .ai-send-btn:disabled {
-
-            opacity:
-                0.6;
-
-            cursor:
-                not-allowed;
-
-        }
-
-
-        .ai-examples {
-
-            display:
-                flex;
-
-            flex-wrap:
-                wrap;
-
-            gap:
-                8px;
-
-            margin-top:
-                15px;
-
-        }
-
-
-        .ai-example {
-
-            border:
-                1px solid
-                #475569;
-
-            background:
-                #1e293b;
-
-            color:
-                #cbd5e1;
-
-            padding:
-                8px 12px;
-
-            border-radius:
-                20px;
-
-            cursor:
-                pointer;
-
-            font-size:
-                13px;
-
-        }
-
-
-        .ai-example:hover {
-
-            background:
-                #334155;
-
-        }
-
-
-        .ai-response {
-
-            margin-top:
-                20px;
-
-            background:
-                #020617;
-
-            border:
-                1px solid
-                #334155;
-
-            border-radius:
-                10px;
-
-            padding:
-                17px;
-
-            min-height:
-                55px;
-
-            color:
-                #e2e8f0;
-
-            white-space:
-                pre-wrap;
-
-            line-height:
-                1.5;
-
-        }
-
-
-        .ai-thinking {
-
-            color:
-                #93c5fd;
-
-        }
-
-
-        .ai-error {
-
-            color:
-                #fca5a5;
-
-        }
-
-
-        /* ====================================================
-           GPIO
-           ==================================================== */
-
-        .gpio-status {
-
-            font-size:
-                22px;
-
-            font-weight:
-                bold;
-
-            margin-bottom:
-                15px;
-
-        }
-
-
-        .button-row {
-
-            display:
-                flex;
-
-            gap:
-                10px;
-
-        }
-
-
-        button {
-
-            border:
-                none;
-
-            padding:
-                12px 20px;
-
-            border-radius:
-                8px;
-
-            background:
-                #2563eb;
-
-            color:
-                white;
-
-            cursor:
-                pointer;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        button:hover {
-
-            background:
-                #1d4ed8;
-
-        }
-
-
-        .off-button {
-
-            background:
-                #dc2626;
-
-        }
-
-
-        .off-button:hover {
-
-            background:
-                #b91c1c;
-
-        }
-
-
-        /* ====================================================
-           CHART
-           ==================================================== */
-
-        .chart-container {
-
-            position:
-                relative;
-
-            height:
-                350px;
-
-        }
-
-
-        /* ====================================================
-           LOG
-           ==================================================== */
-
-        .log {
-
-            background:
-                #020617;
-
-            color:
-                #cbd5e1;
-
-            padding:
-                15px;
-
-            border-radius:
-                10px;
-
-            height:
-                180px;
-
-            overflow-y:
-                auto;
-
-            font-family:
-                Consolas,
-                monospace;
-
-            font-size:
-                13px;
-
-        }
-
-
-        .log-entry {
-
-            margin-bottom:
-                7px;
-
-        }
-
-
-        /* ====================================================
-           RESPONSIVE
-           ==================================================== */
-
-        @media (
-            max-width: 900px
-        ) {
-
-            .metrics {
-
-                grid-template-columns:
-                    repeat(2, 1fr);
-
+    <!-- Three.js (3D board in the hero) -->
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
             }
-
-
-            .info-grid {
-
-                grid-template-columns:
-                    repeat(2, 1fr);
-
-            }
-
         }
-
-
-        @media (
-            max-width: 600px
-        ) {
-
-            .metrics {
-
-                grid-template-columns:
-                    1fr;
-
-            }
-
-
-            .info-grid {
-
-                grid-template-columns:
-                    1fr;
-
-            }
-
-
-            .ai-input-row {
-
-                flex-direction:
-                    column;
-
-            }
-
-
-            .ai-send-btn {
-
-                padding:
-                    13px;
-
-            }
-
-        }
-
-    </style>
+    </script>
 
 </head>
 
@@ -835,1314 +57,493 @@
 <body>
 
 
-<div class="container">
+<!-- ========================================================
+     BACKGROUND
+     ======================================================== -->
+
+<div class="backdrop" aria-hidden="true">
+    <div class="orb orb-cyan"></div>
+    <div class="orb orb-violet"></div>
+    <div class="orb orb-blue"></div>
+    <div class="grid-floor"></div>
+</div>
+
+
+<!-- ========================================================
+     NAV
+     ======================================================== -->
+
+<header class="nav">
+
+    <div class="nav-inner">
+
+        <a class="brand" href="#top">
+            <span class="brand-mark" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04101f" stroke-width="2.2" stroke-linecap="round">
+                    <rect x="6" y="6" width="12" height="12" rx="2"/>
+                    <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>
+                </svg>
+            </span>
+            ESP32 EdgeHub
+        </a>
+
+        <nav class="nav-links" aria-label="Sections">
+            <a href="#overview">Overview</a>
+            <a href="#ai">AI Control</a>
+            <a href="#gpio">GPIO</a>
+            <a href="#telemetry">Telemetry</a>
+            <a href="#log">Log</a>
+            <a href="/update">OTA Update</a>
+        </nav>
+
+        <div
+            id="connPill"
+            class="conn-pill"
+            role="status"
+            aria-live="polite"
+        >
+            <span class="pulse-dot"></span>
+            <span id="connText">Connecting…</span>
+        </div>
+
+    </div>
+
+</header>
+
+
+<main class="container" id="top">
 
 
     <!-- ====================================================
-         HEADER
+         HERO + 3D BOARD
          ==================================================== -->
 
-    <div class="header">
+    <section class="hero">
 
-        <h1>
-            ESP32 EdgeHub
-        </h1>
+        <div class="hero-copy">
 
-        <p>
-            AI-Enabled IoT Control, Monitoring & OTA Platform
-        </p>
+            <span class="eyebrow">AI-enabled IoT platform</span>
 
-    </div>
+            <h1>
+                <span class="gradient-text">ESP32 EdgeHub</span>
+            </h1>
+
+            <p class="hero-sub">
+                AI-Enabled IoT Control, Monitoring &amp; OTA Platform.
+                Watch your board live in 3D, talk to it in plain
+                English, and push new firmware over the air.
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#ai">Ask the AI</a>
+                <a class="btn" href="/update">OTA Update</a>
+            </div>
+
+        </div>
+
+
+        <div
+            id="stage"
+            class="stage"
+        >
+
+            <canvas
+                id="boardCanvas"
+                aria-label="Interactive 3D model of the ESP32 board. Drag to rotate, click the blue LED to toggle GPIO 2."
+                role="img"
+            ></canvas>
+
+            <div id="hotspotWifi" class="hotspot" data-side="right" data-tone="off"><span class="hotspot-label">Wi-Fi · --</span></div>
+            <div id="hotspotLed" class="hotspot" data-side="left" data-tone="off"><span class="hotspot-label">GPIO 2 · --</span></div>
+            <div id="hotspotChip" class="hotspot" data-side="up"><span class="hotspot-label">ESP32-WROOM-32</span></div>
+
+            <div class="stage-hint">
+                Drag to rotate · Click the blue LED to toggle GPIO 2
+            </div>
+
+            <div class="stage-fallback">
+                <div>
+                    <div class="fallback-chip"></div>
+                    The 3D view needs WebGL and an internet connection.
+                    Everything else on the dashboard still works.
+                </div>
+            </div>
+
+        </div>
+
+    </section>
 
 
     <!-- ====================================================
          METRICS
          ==================================================== -->
 
-    <div class="metrics">
+    <section class="metrics section" id="overview">
 
 
-        <div class="metric-card">
+        <div class="card metric reveal" data-tilt>
 
-            <div class="metric-title">
-                Device Status
+            <div class="metric-top depth">
+                <span class="metric-title">Device Status</span>
+                <span class="metric-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </span>
             </div>
 
             <div
                 id="deviceStatus"
-                class="metric-value"
+                class="metric-value depth"
             >
                 Checking...
             </div>
 
+            <div id="deviceStatusFoot" class="metric-foot">Polling every 3 s</div>
+
         </div>
 
 
-        <div class="metric-card">
+        <div class="card metric reveal" data-tilt>
 
-            <div class="metric-title">
-                Device Health
+            <div class="metric-top depth">
+                <span class="metric-title">Device Health</span>
+                <span class="metric-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
             </div>
 
             <div
                 id="deviceHealth"
-                class="metric-value"
+                class="metric-value depth"
             >
                 Checking...
             </div>
 
-        </div>
-
-
-        <div class="metric-card">
-
-            <div class="metric-title">
-                Wi-Fi Signal
-            </div>
-
-            <div
-                id="wifiSignal"
-                class="metric-value"
-            >
-                --
-            </div>
+            <div class="metric-foot">From telemetry rules</div>
 
         </div>
 
 
-        <div class="metric-card">
+        <div class="card metric reveal" data-tilt>
 
-            <div class="metric-title">
-                Free Heap
+            <div class="metric-top depth">
+                <span class="metric-title">Wi-Fi Signal</span>
+                <span class="metric-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                </span>
+            </div>
+
+            <div class="metric-value depth">
+                <span id="wifiSignal">--</span>
+                <span id="signalBars" class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            </div>
+
+            <div id="wifiFoot" class="metric-foot">RSSI</div>
+
+        </div>
+
+
+        <div class="card metric reveal" data-tilt>
+
+            <div class="metric-top depth">
+                <span class="metric-title">Free Heap</span>
+                <span class="metric-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
+                </span>
             </div>
 
             <div
                 id="freeHeap"
-                class="metric-value"
+                class="metric-value depth"
             >
                 --
             </div>
 
+            <div class="meter" aria-hidden="true"><span id="heapMeter"></span></div>
+
         </div>
 
 
-    </div>
+    </section>
 
 
     <!-- ====================================================
-         DEVICE INFORMATION
+         DEVICE INFORMATION + HEALTH
          ==================================================== -->
 
-    <div class="card">
-
-        <h2>
-            Device Information
-        </h2>
+    <section class="grid-2 section">
 
 
-        <div class="info-grid">
+        <div class="card reveal">
 
+            <h2>Device Information</h2>
 
-            <div class="info-item">
+            <div class="info-grid">
 
-                <div class="info-label">
-                    Device
+                <div class="info-item">
+                    <div class="info-label">Device</div>
+                    <div id="deviceName" class="info-value">--</div>
                 </div>
 
-                <div
-                    id="deviceName"
-                    class="info-value"
-                >
-                    --
+                <div class="info-item">
+                    <div class="info-label">IP Address</div>
+                    <div id="ipAddress" class="info-value">--</div>
                 </div>
 
-            </div>
-
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    IP Address
+                <div class="info-item">
+                    <div class="info-label">Wi-Fi Network</div>
+                    <div id="wifiNetwork" class="info-value">--</div>
                 </div>
 
-                <div
-                    id="ipAddress"
-                    class="info-value"
-                >
-                    --
+                <div class="info-item">
+                    <div class="info-label">Uptime</div>
+                    <div id="uptime" class="info-value">--</div>
                 </div>
 
-            </div>
-
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    Wi-Fi Network
+                <div class="info-item">
+                    <div class="info-label">GPIO 2</div>
+                    <div id="gpioState" class="info-value">--</div>
                 </div>
 
-                <div
-                    id="wifiNetwork"
-                    class="info-value"
-                >
-                    --
+                <div class="info-item">
+                    <div class="info-label">Firmware</div>
+                    <div id="firmware" class="info-value">--</div>
                 </div>
 
             </div>
-
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    Uptime
-                </div>
-
-                <div
-                    id="uptime"
-                    class="info-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    GPIO 2
-                </div>
-
-                <div
-                    id="gpioState"
-                    class="info-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    Firmware
-                </div>
-
-                <div
-                    id="firmware"
-                    class="info-value"
-                >
-                    --
-                </div>
-
-            </div>
-
 
         </div>
 
-    </div>
+
+        <div class="card reveal">
+
+            <h2>System Health</h2>
+
+            <div
+                id="healthBox"
+                class="health-box"
+                aria-live="polite"
+            >
+                Loading health...
+            </div>
+
+            <div
+                id="alerts"
+                class="alerts"
+            ></div>
+
+        </div>
+
+
+    </section>
 
 
     <!-- ====================================================
-         HEALTH
+         AI CONTROL
          ==================================================== -->
 
-    <div class="card">
+    <section class="section reveal" id="ai">
 
-        <h2>
-            System Health
-        </h2>
+        <div class="ai-panel">
 
 
-        <div
-            id="healthBox"
-            class="health-box"
-        >
+            <div class="ai-header">
 
-            Loading health...
+                <h2>AI EdgeHub Control</h2>
+
+                <span
+                    id="aiStatus"
+                    class="ai-status"
+                >
+                    {{ ai_provider_info[ai_provider].label }}
+                </span>
+
+            </div>
+
+
+            <p class="ai-description">
+                Control and monitor your ESP32 using natural language.
+                Pick where the AI runs below. You can switch at any time.
+            </p>
+
+
+            <div class="provider-row">
+
+                <div
+                    id="providerSwitch"
+                    class="provider-switch"
+                    role="radiogroup"
+                    aria-label="AI provider"
+                    data-provider="{{ ai_provider }}"
+                >
+
+                    <span class="provider-thumb" aria-hidden="true"></span>
+
+                    {% for key in ["gemini", "ollama", "auto"] %}
+                    <button
+                        type="button"
+                        class="provider-option"
+                        role="radio"
+                        aria-label="{{ ai_provider_info[key].name }}"
+                        data-provider="{{ key }}"
+                        aria-checked="{{ 'true' if key == ai_provider else 'false' }}"
+                        tabindex="{{ '0' if key == ai_provider else '-1' }}"
+                    >
+                        <span class="avail-dot" data-provider-dot="{{ key }}"></span>
+                        {{ ai_provider_info[key].name }}
+                    </button>
+                    {% endfor %}
+
+                </div>
+
+                <p
+                    id="providerDetail"
+                    class="provider-detail"
+                    aria-live="polite"
+                >
+                    {{ ai_provider_info[ai_provider].description }}
+                </p>
+
+            </div>
+
+
+            <div class="ai-input-row">
+
+                <input
+                    id="aiCommand"
+                    class="ai-input"
+                    type="text"
+                    maxlength="500"
+                    autocomplete="off"
+                    placeholder="Ask your ESP32 something..."
+                    aria-label="AI command"
+                >
+
+                <button
+                    id="aiSendButton"
+                    class="ai-send-btn"
+                    onclick="sendAICommand()"
+                >
+                    SEND
+                </button>
+
+            </div>
+
+
+            <div class="ai-examples">
+                <button class="ai-example" onclick="setAICommand('Turn on GPIO 2')">Turn on GPIO 2</button>
+                <button class="ai-example" onclick="setAICommand('Turn off GPIO 2')">Turn off GPIO 2</button>
+                <button class="ai-example" onclick="setAICommand('What is my Wi-Fi signal?')">Wi-Fi signal</button>
+                <button class="ai-example" onclick="setAICommand('Is my ESP32 online?')">Device status</button>
+                <button class="ai-example" onclick="setAICommand('What firmware version am I running?')">Firmware version</button>
+                <button class="ai-example" onclick="setAICommand('How much free memory does my ESP32 have?')">Free memory</button>
+                <button class="ai-example" onclick="setAICommand('Show me my recent Wi-Fi telemetry')">Recent telemetry</button>
+            </div>
+
+
+            <div
+                id="aiResponse"
+                class="ai-response"
+                aria-live="polite"
+            ><span class="ai-placeholder">AI responses will appear here.</span></div>
+
+            <div id="aiMeta" class="ai-meta"></div>
+
 
         </div>
 
-
-        <div
-            id="alerts"
-            class="alerts"
-        >
-
-        </div>
-
-    </div>
+    </section>
 
 
     <!-- ====================================================
-         PHASE 7 - AI CONTROL
+         GPIO + WI-FI HISTORY
          ==================================================== -->
 
-    <div class="ai-panel">
+    <section class="grid-gpio section">
 
 
-        <div class="ai-header">
+        <div class="card gpio-card reveal" id="gpio" data-tilt>
 
-            <h2>
-                AI EdgeHub Control
-            </h2>
+            <h2 class="depth">GPIO Control</h2>
 
+            <div class="gpio-stage depth">
 
-            <span class="ai-status">
-                Qwen3 4B • Local AI
-            </span>
+                <div id="ledOrb" class="led-orb" aria-hidden="true"></div>
 
-        </div>
+                <div>
+                    <div
+                        id="gpioControlStatus"
+                        class="gpio-status"
+                        aria-live="polite"
+                    >
+                        GPIO 2: --
+                    </div>
+                    <div class="gpio-sub">Onboard blue LED</div>
+                </div>
 
+            </div>
 
-        <div class="ai-description">
+            <div class="button-row depth">
 
-            Control and monitor your ESP32 using
-            natural language. The AI runs locally
-            through Ollama.
+                <button
+                    class="keycap"
+                    onclick="controlGPIO('on')"
+                >
+                    TURN ON
+                </button>
 
-        </div>
+                <button
+                    class="keycap keycap-off"
+                    onclick="controlGPIO('off')"
+                >
+                    TURN OFF
+                </button>
 
-
-        <div class="ai-input-row">
-
-
-            <input
-                id="aiCommand"
-                class="ai-input"
-                type="text"
-                maxlength="500"
-                autocomplete="off"
-                placeholder="Ask your ESP32 something..."
-            >
-
-
-            <button
-                id="aiSendButton"
-                class="ai-send-btn"
-                onclick="sendAICommand()"
-            >
-                SEND
-            </button>
-
+            </div>
 
         </div>
 
 
-        <div class="ai-examples">
+        <div class="card reveal" id="telemetry">
 
+            <h2>Wi-Fi Signal History</h2>
 
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'Turn on GPIO 2'
-                )"
-            >
-                Turn on GPIO 2
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'Turn off GPIO 2'
-                )"
-            >
-                Turn off GPIO 2
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'What is my Wi-Fi signal?'
-                )"
-            >
-                Wi-Fi signal
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'Is my ESP32 online?'
-                )"
-            >
-                Device status
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'What firmware version am I running?'
-                )"
-            >
-                Firmware version
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'How much free memory does my ESP32 have?'
-                )"
-            >
-                Free memory
-            </button>
-
-
-            <button
-                class="ai-example"
-                onclick="setAICommand(
-                    'Show me my recent Wi-Fi telemetry'
-                )"
-            >
-                Recent telemetry
-            </button>
-
+            <div class="chart-container">
+                <canvas id="wifiChart"></canvas>
+            </div>
 
         </div>
 
 
-        <div
-            id="aiResponse"
-            class="ai-response"
-        >
-
-            AI responses will appear here.
-
-        </div>
-
-
-    </div>
-
-
-    <!-- ====================================================
-         GPIO CONTROL
-         ==================================================== -->
-
-    <div class="card">
-
-        <h2>
-            GPIO Control
-        </h2>
-
-
-        <div
-            id="gpioControlStatus"
-            class="gpio-status"
-        >
-            GPIO 2: --
-        </div>
-
-
-        <div class="button-row">
-
-
-            <button
-                onclick="controlGPIO('on')"
-            >
-                TURN ON
-            </button>
-
-
-            <button
-                class="off-button"
-                onclick="controlGPIO('off')"
-            >
-                TURN OFF
-            </button>
-
-
-        </div>
-
-    </div>
-
-
-    <!-- ====================================================
-         WIFI HISTORY
-         ==================================================== -->
-
-    <div class="card">
-
-        <h2>
-            Wi-Fi Signal History
-        </h2>
-
-
-        <div class="chart-container">
-
-            <canvas
-                id="wifiChart"
-            ></canvas>
-
-        </div>
-
-    </div>
+    </section>
 
 
     <!-- ====================================================
          SYSTEM LOG
          ==================================================== -->
 
-    <div class="card">
+    <section class="card section reveal" id="log">
 
-        <h2>
-            System Log
-        </h2>
-
+        <h2>System Log</h2>
 
         <div
             id="systemLog"
             class="log"
         ></div>
 
-    </div>
+    </section>
 
 
-</div>
+    <footer class="footer">
+        ESP32 EdgeHub · Flask + Three.js
+    </footer>
 
 
-<script>
+</main>
 
 
-// ============================================================
-// GLOBAL CHART
-// ============================================================
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-let wifiChart = null;
-
-
-// ============================================================
-// FORMAT UPTIME
-// ============================================================
-
-function formatUptime(seconds) {
-
-    if (
-        seconds === null ||
-        seconds === undefined
-    ) {
-
-        return "--";
-
-    }
-
-
-    seconds = Number(seconds);
-
-
-    const days =
-        Math.floor(
-            seconds / 86400
-        );
-
-
-    seconds %= 86400;
-
-
-    const hours =
-        Math.floor(
-            seconds / 3600
-        );
-
-
-    seconds %= 3600;
-
-
-    const minutes =
-        Math.floor(
-            seconds / 60
-        );
-
-
-    const secs =
-        Math.floor(
-            seconds % 60
-        );
-
-
-    return (
-        `${days}d ` +
-        `${hours}h ` +
-        `${minutes}m ` +
-        `${secs}s`
-    );
-
-}
-
-
-// ============================================================
-// SYSTEM LOG
-// ============================================================
-
-function addLog(message) {
-
-    const log =
-        document.getElementById(
-            "systemLog"
-        );
-
-
-    const time =
-        new Date().toLocaleTimeString();
-
-
-    const entry =
-        document.createElement(
-            "div"
-        );
-
-
-    entry.className =
-        "log-entry";
-
-
-    entry.textContent =
-        `[${time}] ${message}`;
-
-
-    log.appendChild(
-        entry
-    );
-
-
-    log.scrollTop =
-        log.scrollHeight;
-
-}
-
-
-// ============================================================
-// LOAD STATUS
-// ============================================================
-
-async function loadStatus() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/status"
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            data.status === "offline"
-        ) {
-
-            throw new Error(
-                data.error ||
-                "ESP32 is offline"
-            );
-
-        }
-
-
-        // ----------------------------------------------------
-        // METRICS
-        // ----------------------------------------------------
-
-        document.getElementById(
-            "deviceStatus"
-        ).textContent =
-            "ONLINE";
-
-
-        document.getElementById(
-            "deviceHealth"
-        ).textContent =
-            data.health ||
-            "UNKNOWN";
-
-
-        document.getElementById(
-            "wifiSignal"
-        ).textContent =
-            `${data.rssi} dBm`;
-
-
-        document.getElementById(
-            "freeHeap"
-        ).textContent =
-            `${data.free_heap} bytes`;
-
-
-        // ----------------------------------------------------
-        // DEVICE INFORMATION
-        // ----------------------------------------------------
-
-        document.getElementById(
-            "deviceName"
-        ).textContent =
-            data.device ||
-            "ESP32 EdgeHub";
-
-
-        document.getElementById(
-            "ipAddress"
-        ).textContent =
-            data.ip ||
-            "--";
-
-
-        document.getElementById(
-            "wifiNetwork"
-        ).textContent =
-            data.ssid ||
-            "--";
-
-
-        document.getElementById(
-            "uptime"
-        ).textContent =
-            formatUptime(
-                data.uptime
-            );
-
-
-        document.getElementById(
-            "gpioState"
-        ).textContent =
-            data.gpio2
-                ? "ON"
-                : "OFF";
-
-
-        document.getElementById(
-            "firmware"
-        ).textContent =
-            data.firmware ||
-            "--";
-
-
-        document.getElementById(
-            "gpioControlStatus"
-        ).textContent =
-            `GPIO 2: ${
-                data.gpio2
-                    ? "ON"
-                    : "OFF"
-            }`;
-
-
-        // ----------------------------------------------------
-        // HEALTH
-        // ----------------------------------------------------
-
-        updateHealth(
-            data.health,
-            data.alerts || []
-        );
-
-
-        addLog(
-            "ESP32 status updated."
-        );
-
-
-    }
-
-    catch (error) {
-
-        document.getElementById(
-            "deviceStatus"
-        ).textContent =
-            "OFFLINE";
-
-
-        document.getElementById(
-            "deviceHealth"
-        ).textContent =
-            "CRITICAL";
-
-
-        document.getElementById(
-            "wifiSignal"
-        ).textContent =
-            "--";
-
-
-        document.getElementById(
-            "freeHeap"
-        ).textContent =
-            "--";
-
-
-        document.getElementById(
-            "healthBox"
-        ).innerHTML =
-            `
-            <span class="health-critical">
-                ESP32 OFFLINE
-            </span>
-            `;
-
-
-        document.getElementById(
-            "alerts"
-        ).innerHTML =
-            `
-            <div class="alert">
-                ESP32 is offline or unreachable.
-            </div>
-            `;
-
-
-        addLog(
-            "ESP32 status check failed."
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// HEALTH
-// ============================================================
-
-function updateHealth(
-    health,
-    alerts
-) {
-
-    const healthBox =
-        document.getElementById(
-            "healthBox"
-        );
-
-
-    let className =
-        "health-good";
-
-
-    if (
-        health === "WARNING"
-    ) {
-
-        className =
-            "health-warning";
-
-    }
-
-
-    if (
-        health === "CRITICAL"
-    ) {
-
-        className =
-            "health-critical";
-
-    }
-
-
-    healthBox.innerHTML =
-        `
-        <span class="${className}">
-            ${health}
-        </span>
-        `;
-
-
-    const alertsBox =
-        document.getElementById(
-            "alerts"
-        );
-
-
-    if (
-        alerts.length === 0
-    ) {
-
-        alertsBox.innerHTML =
-            `
-            <div class="alert">
-                No active alerts.
-            </div>
-            `;
-
-        return;
-
-    }
-
-
-    alertsBox.innerHTML =
-        alerts
-            .map(
-                alert =>
-                    `
-                    <div class="alert">
-                        ${alert}
-                    </div>
-                    `
-            )
-            .join("");
-
-}
-
-
-// ============================================================
-// GPIO CONTROL
-// ============================================================
-
-async function controlGPIO(
-    action
-) {
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/gpio/2/${action}`
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok
-        ) {
-
-            throw new Error(
-                data.error ||
-                "GPIO operation failed"
-            );
-
-        }
-
-
-        const state =
-            action === "on"
-                ? "ON"
-                : "OFF";
-
-
-        document.getElementById(
-            "gpioControlStatus"
-        ).textContent =
-            `GPIO 2: ${state}`;
-
-
-        addLog(
-            `GPIO 2 turned ${state}.`
-        );
-
-
-        await loadStatus();
-
-    }
-
-    catch (error) {
-
-        addLog(
-            "GPIO error: " +
-            error.message
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// LOAD HISTORY
-// ============================================================
-
-async function loadHistory() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/history"
-            );
-
-
-        const history =
-            await response.json();
-
-
-        updateChart(
-            history
-        );
-
-    }
-
-    catch (error) {
-
-        addLog(
-            "History loading failed."
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// UPDATE CHART
-// ============================================================
-
-function updateChart(
-    history
-) {
-
-    const canvas =
-        document.getElementById(
-            "wifiChart"
-        );
-
-
-    if (!canvas) {
-
-        return;
-
-    }
-
-
-    const labels =
-        history.map(
-            item =>
-                new Date(
-                    item.timestamp
-                ).toLocaleTimeString()
-        );
-
-
-    const values =
-        history.map(
-            item =>
-                item.rssi
-        );
-
-
-    if (wifiChart) {
-
-        wifiChart.destroy();
-
-    }
-
-
-    wifiChart =
-        new Chart(
-            canvas,
-            {
-
-                type:
-                    "line",
-
-                data: {
-
-                    labels:
-                        labels,
-
-                    datasets: [
-
-                        {
-
-                            label:
-                                "Wi-Fi RSSI (dBm)",
-
-                            data:
-                                values,
-
-                            tension:
-                                0.3,
-
-                            fill:
-                                false
-
-                        }
-
-                    ]
-
-                },
-
-                options: {
-
-                    responsive:
-                        true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    scales: {
-
-                        y: {
-
-                            title: {
-
-                                display:
-                                    true,
-
-                                text:
-                                    "RSSI (dBm)"
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-
-}
-
-
-// ============================================================
-// AI COMMAND INPUT
-// ============================================================
-
-function setAICommand(
-    command
-) {
-
-    const input =
-        document.getElementById(
-            "aiCommand"
-        );
-
-
-    input.value =
-        command;
-
-
-    input.focus();
-
-}
-
-
-// ============================================================
-// SEND AI COMMAND
-// ============================================================
-
-async function sendAICommand() {
-
-    const input =
-        document.getElementById(
-            "aiCommand"
-        );
-
-
-    const button =
-        document.getElementById(
-            "aiSendButton"
-        );
-
-
-    const responseBox =
-        document.getElementById(
-            "aiResponse"
-        );
-
-
-    const command =
-        input.value.trim();
-
-
-    if (!command) {
-
-        responseBox.innerHTML =
-            `
-            <span class="ai-error">
-                Please enter a command.
-            </span>
-            `;
-
-        return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // LOADING
-    // --------------------------------------------------------
-
-    button.disabled =
-        true;
-
-
-    button.textContent =
-        "THINKING...";
-
-
-    responseBox.innerHTML =
-        `
-        <span class="ai-thinking">
-            Qwen3 is processing your command...
-        </span>
-        `;
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/ai",
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            command:
-                                command
-
-                        })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.error ||
-                "AI request failed."
-            );
-
-        }
-
-
-        responseBox.textContent =
-            data.response;
-
-
-        addLog(
-            "AI: " +
-            data.response
-        );
-
-
-        // Refresh actual ESP32 values
-
-        await loadStatus();
-
-        await loadHistory();
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "AI Error:",
-            error
-        );
-
-
-        responseBox.innerHTML =
-            `
-            <span class="ai-error">
-                AI Error:
-                ${error.message}
-            </span>
-            `;
-
-
-        addLog(
-            "AI Error: " +
-            error.message
-        );
-
-    }
-
-
-    finally {
-
-        button.disabled =
-            false;
-
-
-        button.textContent =
-            "SEND";
-
-    }
-
-}
-
-
-// ============================================================
-// ENTER KEY
-// ============================================================
-
-document
-    .getElementById(
-        "aiCommand"
-    )
-    .addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                sendAICommand();
-
-            }
-
-        }
-    );
-
-
-// ============================================================
-// INITIAL LOAD
-// ============================================================
-
-loadStatus();
-
-loadHistory();
-
-
-// ============================================================
-// AUTO REFRESH
-// ============================================================
-
-setInterval(
-    loadStatus,
-    3000
-);
-
-
-setInterval(
-    loadHistory,
-    10000
-);
-
-
-</script>
+<script type="module" src="{{ url_for('static', filename='js/esp32-scene.js') }}"></script>
 
 
 </body>

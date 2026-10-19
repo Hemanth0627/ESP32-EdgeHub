@@ -1,325 +1,820 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>ESP32 EdgeHub OTA</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+    <title>OTA Update · ESP32 EdgeHub</title>
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #eef2f7;
-            color: #14213d;
-        }
+    <meta name="theme-color" content="#050816">
 
-        .container {
-            max-width: 850px;
-            margin: 50px auto;
-            padding: 20px;
-        }
 
-        .card {
-            background: white;
-            border-radius: 18px;
-            padding: 35px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
+    <!-- Fonts -->
 
-        h1 {
-            margin-top: 0;
-            font-size: 32px;
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap"
+    >
 
-        .subtitle {
-            color: #64748b;
-            margin-bottom: 30px;
-        }
 
-        .status {
-            padding: 18px;
-            border-radius: 12px;
-            background: #f1f5f9;
-            margin-bottom: 25px;
-        }
+    <!-- Styles: shared dashboard theme + a few OTA-only extras -->
 
-        .status strong {
-            display: block;
-            margin-bottom: 8px;
-        }
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dashboard.css') }}"
+    >
 
-        input[type="file"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px dashed #94a3b8;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            background: #f8fafc;
-        }
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/ota.css') }}"
+    >
 
-        button {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: #2563eb;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        button:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-        }
-
-        .progress-container {
-            display: none;
-            margin-top: 25px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 14px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress {
-            width: 0%;
-            height: 100%;
-            background: #2563eb;
-            transition: width 0.2s;
-        }
-
-        .message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            display: none;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .back {
-            display: inline-block;
-            margin-top: 25px;
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: bold;
-        }
-    </style>
 </head>
+
 
 <body>
 
-<div class="container">
 
-    <div class="card">
+<!-- ========================================================
+     BACKGROUND
+     ======================================================== -->
 
-        <h1>ESP32 EdgeHub OTA Update</h1>
+<div class="backdrop" aria-hidden="true">
+    <div class="orb orb-cyan"></div>
+    <div class="orb orb-violet"></div>
+    <div class="orb orb-blue"></div>
+    <div class="grid-floor"></div>
+</div>
 
-        <p class="subtitle">
-            Upload a new ESP32 firmware binary safely through the EdgeHub backend.
-        </p>
 
-        <div class="status">
-            <strong>OTA Instructions</strong>
-            Select the compiled ESP32 <code>.bin</code> firmware file and upload it.
-            Do not disconnect the ESP32 during the update.
-        </div>
+<!-- ========================================================
+     NAV
+     ======================================================== -->
 
-        <input
-            type="file"
-            id="firmware"
-            accept=".bin"
-        >
+<header class="nav">
 
-        <button id="uploadButton" onclick="uploadFirmware()">
-            Upload Firmware
-        </button>
+    <div class="nav-inner">
 
-        <div class="progress-container" id="progressContainer">
-
-            <p id="progressText">
-                Uploading firmware...
-            </p>
-
-            <div class="progress-bar">
-                <div class="progress" id="progress"></div>
-            </div>
-
-        </div>
-
-        <div id="message" class="message"></div>
-
-        <a href="/" class="back">
-            ← Back to ESP32 EdgeHub Dashboard
+        <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04101f" stroke-width="2.2" stroke-linecap="round">
+                    <rect x="6" y="6" width="12" height="12" rx="2"/>
+                    <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>
+                </svg>
+            </span>
+            ESP32 EdgeHub
         </a>
+
+        <nav class="nav-links" aria-label="Pages">
+            <a href="/">Dashboard</a>
+            <a href="/#ai">AI Control</a>
+            <a href="/#gpio">GPIO</a>
+            <a href="/#telemetry">Telemetry</a>
+            <a href="/update" aria-current="page">OTA Update</a>
+        </nav>
+
+        <div
+            id="connPill"
+            class="conn-pill"
+            role="status"
+            aria-live="polite"
+        >
+            <span class="pulse-dot"></span>
+            <span id="connText">Connecting…</span>
+        </div>
 
     </div>
 
-</div>
+</header>
+
+
+<main class="container">
+
+
+    <!-- ====================================================
+         HERO
+         ==================================================== -->
+
+    <section class="ota-hero">
+
+        <span class="eyebrow">Over-the-air update</span>
+
+        <h1>
+            <span class="gradient-text">Firmware OTA Update</span>
+        </h1>
+
+        <p>
+            Upload a new ESP32 firmware binary safely through the
+            EdgeHub backend. No USB cable needed.
+        </p>
+
+        <a class="btn" href="/">← Back to dashboard</a>
+
+    </section>
+
+
+    <section class="ota-grid section">
+
+
+        <!-- ================================================
+             UPLOAD
+             ================================================ -->
+
+        <div class="card upload-card reveal">
+
+            <h2>Upload firmware</h2>
+
+            <p class="card-sub">
+                Do not disconnect the ESP32 during the update.
+            </p>
+
+
+            <!-- The whole box is a <label>, so clicking it opens
+                 the file picker. Files can also be dropped on it. -->
+
+            <label
+                id="dropzone"
+                class="dropzone"
+                for="firmware"
+            >
+
+                <input
+                    type="file"
+                    id="firmware"
+                    class="visually-hidden"
+                    accept=".bin"
+                >
+
+                <span class="drop-icon" aria-hidden="true">
+                    <svg class="icon-upload" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+                    <svg class="icon-file" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14l2 2 4-4"/></svg>
+                </span>
+
+                <span id="dropTitle" class="drop-title">
+                    Drop your firmware .bin here
+                </span>
+
+                <span id="dropHint" class="drop-hint">
+                    or <strong>click to browse</strong>
+                </span>
+
+                <span class="drop-meta">
+                    ESP32 firmware · .bin only · max&nbsp;4&nbsp;MB
+                </span>
+
+            </label>
+
+
+            <button
+                id="uploadButton"
+                class="keycap upload-btn"
+                type="button"
+                onclick="uploadFirmware()"
+            >
+                UPLOAD FIRMWARE
+            </button>
+
+
+            <div
+                id="progressContainer"
+                class="progress-wrap"
+                data-state="uploading"
+                hidden
+            >
+
+                <div class="progress-head">
+                    <span id="progressText">Uploading firmware...</span>
+                    <span id="progressPercent" class="progress-percent">0%</span>
+                </div>
+
+                <div
+                    id="progressTrack"
+                    class="progress-track"
+                    role="progressbar"
+                    aria-labelledby="progressText"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                >
+                    <div id="progress" class="progress-fill"></div>
+                </div>
+
+            </div>
+
+
+            <div
+                id="message"
+                class="ota-message"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
+
+        </div>
+
+
+        <!-- ================================================
+             DEVICE + HOW IT WORKS
+             ================================================ -->
+
+        <div class="ota-side">
+
+
+            <div class="card reveal" data-tilt>
+
+                <h2 class="depth">Target device</h2>
+
+                <dl class="device-list depth">
+
+                    <div class="device-row">
+                        <dt>Status</dt>
+                        <dd id="deviceState">Checking...</dd>
+                    </div>
+
+                    <div class="device-row">
+                        <dt>Device</dt>
+                        <dd id="deviceName">--</dd>
+                    </div>
+
+                    <div class="device-row">
+                        <dt>Firmware</dt>
+                        <dd id="deviceFirmware">--</dd>
+                    </div>
+
+                    <div class="device-row">
+                        <dt>IP address</dt>
+                        <dd id="deviceIp">--</dd>
+                    </div>
+
+                    <div class="device-row">
+                        <dt>Uptime</dt>
+                        <dd id="deviceUptime">--</dd>
+                    </div>
+
+                </dl>
+
+                <p id="deviceNote" class="device-note" hidden>
+                    The ESP32 is not responding right now. Uploads
+                    will fail until it is powered on and back on Wi-Fi.
+                </p>
+
+            </div>
+
+
+            <div class="card reveal">
+
+                <h2>How it works</h2>
+
+                <ol class="steps">
+                    <li>
+                        <span>
+                            In Arduino IDE choose
+                            <strong>Sketch → Export Compiled Binary</strong>
+                            to get a <code>.bin</code> file.
+                        </span>
+                    </li>
+                    <li>
+                        <span>
+                            Drop the file on the upload box (or click it)
+                            and press <strong>Upload Firmware</strong>.
+                        </span>
+                    </li>
+                    <li>
+                        <span>
+                            EdgeHub sends it to the ESP32, which flashes
+                            it and reboots. Keep the board powered.
+                        </span>
+                    </li>
+                </ol>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+    <footer class="footer">
+        ESP32 EdgeHub · OTA firmware update
+    </footer>
+
+
+</main>
+
 
 <script>
 
-async function uploadFirmware() {
+// ============================================================
+// ESP32 EDGEHUB — OTA PAGE
+// File picking (click or drag-and-drop), upload with a
+// progress bar, and the ESP32 status card.
+// ============================================================
 
-    const fileInput = document.getElementById("firmware");
-    const button = document.getElementById("uploadButton");
-    const progressContainer = document.getElementById("progressContainer");
-    const progress = document.getElementById("progress");
-    const progressText = document.getElementById("progressText");
-    const message = document.getElementById("message");
+// Same limit as MAX_CONTENT_LENGTH in app.py.
+const MAX_FIRMWARE_BYTES = 4 * 1024 * 1024;
 
-    message.style.display = "none";
-    message.className = "message";
+// How often to ask /api/ota/status if the ESP32 is online.
+const STATUS_INTERVAL_MS = 5000;
 
-    if (!fileInput.files.length) {
+const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+).matches;
 
-        message.textContent = "Please select a firmware .bin file.";
-        message.classList.add("error");
-        message.style.display = "block";
+// The .bin file the user picked or dropped (null = none yet).
+let selectedFile = null;
 
+let isUploading = false;
+
+
+function $(id) {
+
+    return document.getElementById(id);
+
+}
+
+
+function formatBytes(bytes) {
+
+    if (bytes < 1024) {
+        return bytes + " B";
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(1) + " KB";
+    }
+
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+
+}
+
+
+function formatUptime(seconds) {
+
+    if (seconds === null || seconds === undefined) {
+        return "--";
+    }
+
+    seconds = Number(seconds);
+
+    const days = Math.floor(seconds / 86400);
+    seconds %= 86400;
+
+    const hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+
+    return `${days}d ${hours}h ${minutes}m ${secs}s`;
+
+}
+
+
+// ============================================================
+// MESSAGE BOX
+// ============================================================
+
+// type is "success" or "error". detail (optional) is the raw
+// server text, tucked away under "Technical details".
+function showMessage(type, title, detail) {
+
+    const message = $("message");
+
+    message.className = "ota-message " + type;
+    message.textContent = "";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "message-title";
+    titleEl.textContent = title;
+    message.appendChild(titleEl);
+
+    if (detail && detail !== title) {
+
+        const details = document.createElement("details");
+        details.className = "message-detail";
+
+        const summary = document.createElement("summary");
+        summary.textContent = "Technical details";
+
+        const code = document.createElement("code");
+        code.textContent = detail;
+
+        details.append(summary, code);
+        message.appendChild(details);
+
+    }
+
+    message.hidden = false;
+
+}
+
+
+function hideMessage() {
+
+    $("message").hidden = true;
+
+}
+
+
+// ============================================================
+// FILE SELECTION — click to browse or drag-and-drop
+// ============================================================
+
+// Returns an error message, or "" if the file looks fine.
+function checkFirmwareFile(file) {
+
+    if (!file.name.toLowerCase().endsWith(".bin")) {
+        return "Only .bin firmware files are allowed.";
+    }
+
+    if (file.size > MAX_FIRMWARE_BYTES) {
+        return "Firmware file is too large. Maximum size is 4 MB.";
+    }
+
+    return "";
+
+}
+
+
+function selectFile(file) {
+
+    hideMessage();
+
+    const dropzone = $("dropzone");
+    const problem = checkFirmwareFile(file);
+
+    if (problem) {
+
+        selectedFile = null;
+        $("firmware").value = "";
+
+        dropzone.classList.remove("has-file");
+        $("dropTitle").textContent = "Drop your firmware .bin here";
+        $("dropHint").innerHTML = "or <strong>click to browse</strong>";
+
+        showMessage("error", problem);
+        return;
+
+    }
+
+    selectedFile = file;
+
+    dropzone.classList.add("has-file");
+    $("dropTitle").textContent = file.name;
+    $("dropHint").innerHTML =
+        formatBytes(file.size) + " · <strong>click or drop to replace</strong>";
+
+    // A new file means the old progress bar no longer applies.
+    $("progressContainer").hidden = true;
+
+}
+
+
+function initFilePicker() {
+
+    const dropzone = $("dropzone");
+    const fileInput = $("firmware");
+
+    fileInput.addEventListener("change", () => {
+
+        if (fileInput.files.length) {
+            selectFile(fileInput.files[0]);
+        }
+
+    });
+
+    // Light the box up while a file is dragged over it.
+    dropzone.addEventListener("dragenter", event => {
+        event.preventDefault();
+        dropzone.classList.add("is-dragover");
+    });
+
+    dropzone.addEventListener("dragover", event => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = isUploading ? "none" : "copy";
+        dropzone.classList.add("is-dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("is-dragover");
+    });
+
+    dropzone.addEventListener("drop", event => {
+
+        event.preventDefault();
+        dropzone.classList.remove("is-dragover");
+
+        const file = event.dataTransfer.files[0];
+
+        if (file && !isUploading) {
+            selectFile(file);
+        }
+
+    });
+
+    // A file dropped next to the box would make the browser
+    // open it and leave this page. Block that.
+    ["dragover", "drop"].forEach(type => {
+        window.addEventListener(type, event => event.preventDefault());
+    });
+
+}
+
+
+// ============================================================
+// PROGRESS BAR
+// ============================================================
+
+// state: "uploading" | "flashing" | "success" | "error"
+function setProgress(state, percent, text) {
+
+    $("progressContainer").hidden = false;
+    $("progressContainer").dataset.state = state;
+
+    $("progress").style.width = percent + "%";
+    $("progressPercent").textContent = percent + "%";
+    $("progressTrack").setAttribute("aria-valuenow", percent);
+
+    $("progressText").textContent = text;
+
+}
+
+
+function setBusy(busy) {
+
+    isUploading = busy;
+
+    const button = $("uploadButton");
+
+    button.disabled = busy;
+    button.textContent = busy ? "UPLOADING..." : "UPLOAD FIRMWARE";
+
+    $("firmware").disabled = busy;
+    $("dropzone").classList.toggle("is-busy", busy);
+
+}
+
+
+// ============================================================
+// UPLOAD — POST /api/ota (multipart field "firmware")
+// ============================================================
+
+function uploadFirmware() {
+
+    hideMessage();
+
+    if (!selectedFile) {
+        showMessage("error", "Please select a firmware .bin file.");
         return;
     }
 
-    const file = fileInput.files[0];
+    const problem = checkFirmwareFile(selectedFile);
 
-    if (!file.name.toLowerCase().endsWith(".bin")) {
-
-        message.textContent = "Only .bin firmware files are allowed.";
-        message.classList.add("error");
-        message.style.display = "block";
-
+    if (problem) {
+        showMessage("error", problem);
         return;
     }
 
     const formData = new FormData();
 
-    formData.append("firmware", file);
+    formData.append("firmware", selectedFile);
 
-    button.disabled = true;
-    button.textContent = "Uploading...";
+    setBusy(true);
+    setProgress("uploading", 0, "Uploading firmware...");
 
-    progressContainer.style.display = "block";
-    progress.style.width = "0%";
-    progressText.textContent = "Uploading firmware...";
+    // XMLHttpRequest (not fetch) because it reports upload progress.
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("POST", "/api/ota", true);
+
+    xhr.upload.addEventListener("progress", event => {
+
+        if (event.lengthComputable) {
+
+            const percent = Math.round((event.loaded / event.total) * 100);
+
+            setProgress("uploading", percent, "Uploading firmware...");
+
+        }
+
+    });
+
+    // The file has reached EdgeHub; now it forwards it to the ESP32.
+    xhr.upload.addEventListener("load", () => {
+
+        setProgress("flashing", 100, "Sending to the ESP32 and flashing...");
+
+    });
+
+    xhr.onload = function() {
+
+        setBusy(false);
+
+        let response;
+
+        try {
+            response = JSON.parse(xhr.responseText);
+        } catch (error) {
+            setProgress("error", 100, "Upload failed.");
+            showMessage("error", "Unexpected response from the EdgeHub server.");
+            return;
+        }
+
+        const serverText = response.message || response.error;
+
+        if (xhr.status === 200 && response.success) {
+
+            setProgress("success", 100, "Firmware uploaded successfully.");
+
+            showMessage(
+                "success",
+                serverText || "OTA update completed successfully.",
+                response.esp32_response
+            );
+
+            return;
+
+        }
+
+        setProgress("error", 100, "Upload failed.");
+
+        if (xhr.status === 503) {
+
+            showMessage(
+                "error",
+                "Could not reach the ESP32. Check that it is powered on " +
+                "and on the same Wi-Fi, then try again.",
+                serverText
+            );
+
+        } else {
+
+            showMessage("error", serverText || "OTA update failed.");
+
+        }
+
+    };
+
+    xhr.onerror = function() {
+
+        setBusy(false);
+        setProgress("error", 0, "Upload failed.");
+        showMessage("error", "Could not connect to the EdgeHub backend.");
+
+    };
+
+    xhr.send(formData);
+
+}
+
+
+// ============================================================
+// DEVICE STATUS — GET /api/ota/status
+// ============================================================
+
+function showDeviceStatus(data) {
+
+    const online = data.online === true;
+
+    const pill = $("connPill");
+
+    pill.classList.toggle("is-online", online);
+    pill.classList.toggle("is-offline", !online);
+
+    $("connText").textContent = online ? "ESP32 online" : "ESP32 offline";
+
+    const state = $("deviceState");
+
+    state.textContent = online ? "Online" : "Offline";
+    state.className = online ? "tone-good" : "tone-bad";
+
+    $("deviceName").textContent = online ? (data.device || "--") : "--";
+    $("deviceFirmware").textContent = online ? (data.firmware || "--") : "--";
+    $("deviceIp").textContent = online ? (data.ip || "--") : "--";
+    $("deviceUptime").textContent = online ? formatUptime(data.uptime) : "--";
+
+    $("deviceNote").hidden = online;
+
+}
+
+
+async function loadOtaStatus() {
 
     try {
 
-        const xhr = new XMLHttpRequest();
+        // Answers 503 (with online: false) when the ESP32 is offline.
+        const response = await fetch("/api/ota/status");
 
-        xhr.open("POST", "/api/ota", true);
+        showDeviceStatus(await response.json());
 
-        xhr.upload.addEventListener("progress", function(event) {
+    } catch (error) {
 
-            if (event.lengthComputable) {
+        // EdgeHub itself is unreachable.
+        showDeviceStatus({ online: false });
 
-                const percent =
-                    Math.round((event.loaded / event.total) * 100);
+    }
 
-                progress.style.width = percent + "%";
+    setTimeout(loadOtaStatus, STATUS_INTERVAL_MS);
 
-                progressText.textContent =
-                    "Uploading firmware... " + percent + "%";
+}
+
+
+// ============================================================
+// 3D EFFECTS — same as the dashboard
+// ============================================================
+
+function initTilt() {
+
+    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    if (!canHover || prefersReducedMotion) {
+        return;
+    }
+
+    const maxTilt = 8;
+
+    document.querySelectorAll("[data-tilt]").forEach(card => {
+
+        card.addEventListener("pointermove", event => {
+
+            const rect = card.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / rect.width;
+            const y = (event.clientY - rect.top) / rect.height;
+
+            card.classList.add("is-tilting");
+            card.style.setProperty("--ry", `${(x - 0.5) * 2 * maxTilt}deg`);
+            card.style.setProperty("--rx", `${(0.5 - y) * 2 * maxTilt}deg`);
+            card.style.setProperty("--gx", `${x * 100}%`);
+            card.style.setProperty("--gy", `${y * 100}%`);
+            card.style.setProperty("--glare", "1");
+
+        });
+
+        card.addEventListener("pointerleave", () => {
+
+            card.classList.remove("is-tilting");
+            card.style.setProperty("--rx", "0deg");
+            card.style.setProperty("--ry", "0deg");
+            card.style.setProperty("--glare", "0");
+
+        });
+
+    });
+
+}
+
+
+function initReveal() {
+
+    const items = document.querySelectorAll(".reveal");
+
+    if (!("IntersectionObserver" in window) || prefersReducedMotion) {
+        items.forEach(item => item.classList.add("is-visible"));
+        return;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+
+        entries.forEach(entry => {
+
+            if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
             }
 
         });
 
-        xhr.onload = function() {
+    }, { threshold: 0.12 });
 
-            button.disabled = false;
-            button.textContent = "Upload Firmware";
-
-            try {
-
-                const response = JSON.parse(xhr.responseText);
-
-                if (xhr.status === 200 && response.success) {
-
-                    progress.style.width = "100%";
-
-                    progressText.textContent =
-                        "Firmware uploaded successfully.";
-
-                    message.textContent =
-                        response.message ||
-                        "OTA update completed successfully.";
-
-                    message.classList.add("success");
-                    message.style.display = "block";
-
-                } else {
-
-                    message.textContent =
-                        response.message ||
-                        response.error ||
-                        "OTA update failed.";
-
-                    message.classList.add("error");
-                    message.style.display = "block";
-                }
-
-            } catch (error) {
-
-                message.textContent =
-                    "Unexpected response from the EdgeHub server.";
-
-                message.classList.add("error");
-                message.style.display = "block";
-            }
-
-        };
-
-        xhr.onerror = function() {
-
-            button.disabled = false;
-            button.textContent = "Upload Firmware";
-
-            message.textContent =
-                "Could not connect to the EdgeHub backend.";
-
-            message.classList.add("error");
-            message.style.display = "block";
-        };
-
-        xhr.send(formData);
-
-    } catch (error) {
-
-        button.disabled = false;
-        button.textContent = "Upload Firmware";
-
-        message.textContent =
-            "OTA upload failed: " + error.message;
-
-        message.classList.add("error");
-        message.style.display = "block";
-    }
+    items.forEach((item, index) => {
+        item.style.transitionDelay = `${(index % 4) * 70}ms`;
+        observer.observe(item);
+    });
 
 }
+
+
+// ============================================================
+// START
+// ============================================================
+
+initFilePicker();
+initTilt();
+initReveal();
+loadOtaStatus();
 
 </script>
 
 </body>
+
 </html>

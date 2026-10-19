@@ -1,0 +1,582 @@
+/* ============================================================
+   ESP32 EDGEHUB — OTA UPDATE PAGE
+   Loaded after dashboard.css, which already provides the
+   colours, background, nav, glass cards, buttons and keycaps.
+   This file only adds what the OTA page needs on top.
+   ============================================================ */
+
+/* Make the HTML "hidden" attribute win over display rules below. */
+[hidden] {
+    display: none !important;
+}
+
+/* Hidden from view but still reachable with the keyboard. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* Highlight the page we are on in the nav. */
+.nav-links a[aria-current="page"] {
+    color: var(--text);
+    background: rgba(34, 211, 238, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.25);
+}
+
+
+/* ============================================================
+   HERO + LAYOUT
+   ============================================================ */
+
+.ota-hero {
+    padding-top: 44px;
+    max-width: 720px;
+}
+
+.ota-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin: 18px 0 12px;
+}
+
+.ota-hero p {
+    color: var(--muted);
+    font-size: 17px;
+    margin: 0 0 22px;
+}
+
+.ota-hero .btn {
+    padding: 10px 18px;
+    font-size: 14px;
+}
+
+.ota-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.ota-side {
+    display: grid;
+    gap: 24px;
+}
+
+.card-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: -10px 0 20px;
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--cyan);
+}
+
+
+/* ============================================================
+   UPLOAD CARD — glowing gradient border like the AI panel
+   ============================================================ */
+
+.upload-card {
+    padding: 28px;
+    background:
+        linear-gradient(var(--glass-strong), var(--glass-strong)) padding-box,
+        linear-gradient(135deg, rgba(34, 211, 238, 0.55), rgba(139, 92, 246, 0.55), rgba(34, 211, 238, 0.08)) border-box;
+    border: 1px solid transparent;
+    box-shadow: 0 30px 80px -30px rgba(34, 211, 238, 0.35), var(--shadow);
+}
+
+
+/* ============================================================
+   DROP ZONE
+   ============================================================ */
+
+.dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 38px 20px 32px;
+    border: 2px dashed rgba(34, 211, 238, 0.4);
+    border-radius: 18px;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(34, 211, 238, 0.1), transparent 70%),
+        rgba(5, 8, 22, 0.55);
+    text-align: center;
+    cursor: pointer;
+    transition:
+        border-color 0.25s,
+        box-shadow 0.25s,
+        background 0.25s,
+        transform 0.35s var(--ease-out);
+}
+
+/* Soft "breathing" glow around the box. */
+.dropzone::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    box-shadow: 0 0 40px -8px var(--cyan);
+    opacity: 0.35;
+    pointer-events: none;
+    animation: zone-breathe 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes zone-breathe {
+    to {
+        opacity: 0.9;
+    }
+}
+
+/* Children ignore the mouse, so drag events only fire on the
+   box itself (otherwise the glow flickers over the text). */
+.dropzone > * {
+    pointer-events: none;
+}
+
+.dropzone:hover,
+.dropzone:focus-within {
+    border-color: var(--cyan);
+    box-shadow:
+        0 0 0 4px rgba(34, 211, 238, 0.12),
+        0 0 36px -4px rgba(34, 211, 238, 0.5);
+}
+
+.dropzone:has(input:focus-visible) {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+}
+
+/* A file is being dragged over the box. */
+.dropzone.is-dragover {
+    border-style: solid;
+    border-color: var(--cyan);
+    transform: translateY(-4px) scale(1.015);
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(34, 211, 238, 0.22), transparent 70%),
+        rgba(8, 14, 36, 0.85);
+    box-shadow:
+        0 0 0 6px rgba(34, 211, 238, 0.15),
+        0 0 70px -6px rgba(34, 211, 238, 0.75),
+        inset 0 0 40px rgba(34, 211, 238, 0.15);
+}
+
+/* A valid .bin file has been picked. */
+.dropzone.has-file {
+    border-color: rgba(52, 211, 153, 0.6);
+}
+
+.dropzone.has-file::before {
+    box-shadow: 0 0 40px -8px var(--green);
+}
+
+.dropzone.is-busy {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* 3D keycap-style icon that floats gently. */
+.drop-icon {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 8px;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue) 55%, var(--violet));
+    color: #04101f;
+    box-shadow:
+        0 8px 0 #1e2f6e,
+        0 18px 30px -10px rgba(34, 211, 238, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: perspective(400px) rotateX(22deg);
+    animation: icon-float 3.2s ease-in-out infinite;
+    transition: transform 0.4s var(--ease-out), background 0.3s, box-shadow 0.3s;
+}
+
+@keyframes icon-float {
+    50% {
+        translate: 0 -6px;
+    }
+}
+
+.dropzone.is-dragover .drop-icon {
+    transform: perspective(400px) rotateX(0deg) scale(1.1);
+}
+
+.dropzone.has-file .drop-icon {
+    background: linear-gradient(135deg, #a7f3d0, var(--green) 55%, #059669);
+    box-shadow:
+        0 8px 0 #065f46,
+        0 18px 30px -10px rgba(52, 211, 153, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.drop-icon .icon-file,
+.dropzone.has-file .icon-upload {
+    display: none;
+}
+
+.dropzone.has-file .icon-file {
+    display: block;
+}
+
+.drop-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.drop-hint {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.drop-hint strong {
+    color: var(--cyan);
+    font-weight: 600;
+}
+
+.drop-meta {
+    margin-top: 6px;
+    color: var(--faint);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-wrap: balance;
+}
+
+
+/* ============================================================
+   UPLOAD BUTTON (a .keycap from dashboard.css)
+   ============================================================ */
+
+.upload-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 18px 12px;
+    font-size: 15px;
+}
+
+.keycap:disabled {
+    cursor: wait;
+    filter: saturate(0.5) brightness(0.85);
+    transform: translateY(5px);
+    box-shadow:
+        0 3px 0 var(--cap-edge),
+        0 6px 14px -8px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+
+/* ============================================================
+   PROGRESS BAR — glowing, striped, animated
+   ============================================================ */
+
+.progress-wrap {
+    margin-top: 26px;
+}
+
+.progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.progress-percent {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text);
+}
+
+.progress-track {
+    height: 16px;
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(5, 8, 22, 0.85);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.progress-fill {
+    position: relative;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    overflow: hidden;
+    background-image:
+        linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.2) 25%, transparent 25%,
+            transparent 50%, rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0.2) 75%, transparent 75%
+        ),
+        linear-gradient(90deg, var(--cyan), var(--blue) 60%, var(--violet));
+    background-size: 24px 24px, 100% 100%;
+    box-shadow:
+        0 0 18px rgba(34, 211, 238, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: width 0.3s var(--ease-out);
+    animation: stripes-move 0.8s linear infinite;
+}
+
+/* A bright sheen that sweeps along the bar. */
+.progress-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: translateX(-100%);
+    animation: sheen 1.6s var(--ease-out) infinite;
+}
+
+@keyframes stripes-move {
+    from {
+        background-position: 24px 0, 0 0;
+    }
+
+    to {
+        background-position: 0 0, 0 0;
+    }
+}
+
+@keyframes sheen {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* Upload finished, waiting for the ESP32 to flash: faster
+   stripes and a pulsing glow. */
+.progress-wrap[data-state="flashing"] .progress-fill {
+    animation:
+        stripes-move 0.4s linear infinite,
+        glow-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+    to {
+        box-shadow:
+            0 0 30px rgba(139, 92, 246, 0.85),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+}
+
+.progress-wrap[data-state="success"] .progress-fill {
+    background-image: linear-gradient(90deg, #6ee7b7, var(--green));
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.6);
+    animation: none;
+}
+
+.progress-wrap[data-state="error"] .progress-fill {
+    background-image: linear-gradient(90deg, #fca5a5, var(--red));
+    box-shadow: 0 0 18px rgba(248, 113, 113, 0.55);
+    animation: none;
+}
+
+.progress-wrap[data-state="success"] .progress-fill::after,
+.progress-wrap[data-state="error"] .progress-fill::after {
+    display: none;
+}
+
+.progress-wrap[data-state="success"] .progress-percent {
+    color: var(--green);
+}
+
+.progress-wrap[data-state="error"] .progress-percent {
+    color: var(--red);
+}
+
+
+/* ============================================================
+   MESSAGE BOX
+   ============================================================ */
+
+.ota-message {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    animation: log-in 0.4s var(--ease-out);
+}
+
+.ota-message.success {
+    background: rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.3);
+    color: #6ee7b7;
+}
+
+.ota-message.error {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.3);
+    color: #fca5a5;
+}
+
+.message-title {
+    font-weight: 600;
+}
+
+.message-detail {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+
+.message-detail summary {
+    cursor: pointer;
+}
+
+.message-detail code {
+    display: block;
+    margin-top: 6px;
+    color: #a5b4d4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   TARGET DEVICE + HOW IT WORKS
+   ============================================================ */
+
+.device-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.device-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(5, 8, 22, 0.45);
+    border: 1px solid var(--border);
+}
+
+.device-row dt {
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.device-row dd {
+    margin: 0;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 13.5px;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.device-note {
+    margin: 14px 0 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.22);
+    color: #fcd34d;
+    font-size: 13px;
+}
+
+.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+}
+
+.steps li {
+    counter-increment: step;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* Little 3D number keys: 1, 2, 3 */
+.steps li::before {
+    content: counter(step);
+    flex: none;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    color: #04101f;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow:
+        0 3px 0 #1e2f6e,
+        0 6px 14px -4px rgba(34, 211, 238, 0.5);
+}
+
+.steps strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .ota-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+
+    .ota-hero {
+        padding-top: 28px;
+    }
+
+    .ota-hero p {
+        font-size: 16px;
+    }
+
+    .upload-card {
+        padding: 20px;
+    }
+
+    .dropzone {
+        padding: 30px 16px 26px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .drop-icon {
+        transform: none;
+    }
+}

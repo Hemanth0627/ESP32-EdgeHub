@@ -30,6 +30,12 @@ The app adds PWM output control for approved pins, with validation in the tool i
 
 A read-only operation gathers available device status and GPIO, PWM, and ADC information into one response.
 
+## Gemini, AI provider switch and 3D dashboard
+
+AI commands can run on Google Gemini (free tier) as well as the local Ollama model. Gemini falls back through several free models when one is busy or out of quota. The dashboard has a Gemini / Ollama / Auto switch; Auto uses Gemini first and local Ollama when Gemini can't answer. The choice is saved per machine in `ai_settings.json`.
+
+The dashboard and OTA page were redesigned with a dark 3D look: a live Three.js model of the ESP32 that mirrors GPIO 2 and Wi-Fi signal, tilt cards, animated metrics, and a drag-and-drop firmware upload.
+
 ## OTA and firmware
 
 The Flask app includes an OTA upload interface for compatible ESP32 firmware. The supplied project folder contains no firmware source, so firmware endpoints and image format must match firmware provided separately.
